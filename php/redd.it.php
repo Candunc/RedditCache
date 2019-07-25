@@ -16,10 +16,19 @@ $url = ('https://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);
 
 if (contains_substring($file, ".jpg")) {
 	header("Content-type: image/jpeg");
+
+} elseif (contains_substring($file, ".png") || contains_substring($file, ".gif?format=png8")) {
+	header("Content-type: image/png");
+
+} elseif (contains_substring($file, ".gif")) {
+	header("Content-type: image/gif");
+
 } elseif (contains_substring($file, ".m3u8")) {
 	header("Content-type: application/x-mpegURL");
+
 } elseif (contains_substring($file, ".ts")) {
 	header("Content-type: video/MP2T");
+
 } else {
 	# Work in progress for issue #2, more investigation required.
 	$disable_cache = true;
