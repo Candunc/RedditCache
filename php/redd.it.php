@@ -7,7 +7,7 @@ const LOG_METADATA = false;
 
 $disable_cache = false;
 
-$headers = getallheaders();
+$client_headers = getallheaders();
 
 $parts = parse_url($_SERVER['REQUEST_URI']);
 $file = substr($parts["path"], 1);
@@ -30,7 +30,6 @@ if (contains_substring($file, ".jpg")) {
 	header("Content-type: video/MP2T");
 
 } else {
-	# Work in progress for issue #2, more investigation required.
 	$disable_cache = true;
 	header("Content-type: text/html");
 }
@@ -40,22 +39,17 @@ if ($file === "" || $file === "favicon.ico") {
 	$disable_cache = true;
 }
 
+$curl_headers = array();
+foreach ($client_headers as $key => $value) {
+	$curl_headers[] = ($key . ': ' . $value);
+}
+
 if ($disable_cache) {
-	echo(get($url));
+	echo(get($url, $curl_headers));
 	die();
 }
 
 $db = new Database();
-
-# Although we _do_ eventually want to debug #2, we're only opening
-# the database if we are caching something.
-if (LOG_METADATA) {
-	$meta_headers = json_encode($headers);
-
-	$stmt = $db->prepare("INSERT INTO `reddit`.`metadata` (`url`, `file`, `headers`) VALUES (?, ?, ?)");
-	$stmt->bind_param('sss', $url, $file, $meta_headers);
-	$stmt->execute();
-}
 
 $stmt = $db->prepare("SELECT `contents` FROM `reddit`.`redd.it` WHERE `file`=?");
 $stmt->bind_param('s', $file);
@@ -64,17 +58,8 @@ $stmt->execute();
 $result = $stmt->get_result();
 if ($result->num_rows === 0) {
 	# Media is not cached!
-	$send_headers = array();
 
-	if (isset($headers["Accept-Encoding"])) {
-		$send_headers[] = ("Accept-Encoding: " . $headers["Accept-Encoding"]);
-	}
-
-	if (isset($headers["X-Playback-Session-Id"])) {
-		$send_headers[] = ("X-Playback-Session-Id: " . $headers["X-Playback-Session-Id"]);
-	}
-
-	$data = get($url, $send_headers);
+	$data = get($url, $curl_headers);
 	$null = NULL;
 
 	$stmt = $db->prepare("INSERT INTO `reddit`.`redd.it` (`file`, `contents`) VALUES (?, ?)");
