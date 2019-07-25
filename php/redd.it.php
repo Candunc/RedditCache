@@ -3,6 +3,7 @@ require_once "common.php";
 
 # Limit our database to ~512 KiB per packet.
 const PACKET_SIZE = 1024*512;
+const LOG_METADATA = false;
 
 $disable_cache = false;
 
@@ -20,11 +21,12 @@ if (contains_substring($file, ".jpg")) {
 } elseif (contains_substring($file, ".ts")) {
 	header("Content-type: video/MP2T");
 } else {
-//	header("Content-type: application/octet-stream");
+	# Work in progress for issue #2, more investigation required.
 	$disable_cache = true;
 	header("Content-type: text/html");
 }
 
+# Disable caching root page or favicon
 if ($file === "" || $file === "favicon.ico") {
 	$disable_cache = true;
 }
@@ -35,6 +37,16 @@ if ($disable_cache) {
 }
 
 $db = new Database();
+
+# Although we _do_ eventually want to debug #2, we're only opening
+# the database if we are caching something.
+if (LOG_METADATA) {
+	$meta_headers = json_encode($headers);
+
+	$stmt = $db->prepare("INSERT INTO `reddit`.`metadata` (`url`, `file`, `headers`) VALUES (?, ?, ?)");
+	$stmt->bind_param('sss', $url, $file, $meta_headers);
+	$stmt->execute();
+}
 
 $stmt = $db->prepare("SELECT `contents` FROM `reddit`.`redd.it` WHERE `file`=?");
 $stmt->bind_param('s', $file);
@@ -83,7 +95,9 @@ if (isset($headers["Range"])) {
 	if (!isset($end) || $end === "") {
 		echo($data);
 	} else {
-		echo(substr($data, $start, ($end-$start)));	
+		header("Content-Range: bytes " . $start . "-" . $end . "/" . strlen($data));
+
+		echo(substr($data, $start, ($end-$start+1)));	
 	}
 } else {
 	echo($data);

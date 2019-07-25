@@ -23,6 +23,17 @@ class Database {
 			COLLATE='utf8mb4_bin'
 			ENGINE=InnoDB
 			;");
+
+		$this->conn->query("
+			CREATE TABLE IF NOT EXISTS `reddit`.`metadata` (
+				`timestamp` DATETIME NOT NULL DEFAULT current_timestamp(),
+				`url` VARCHAR(64) NOT NULL COLLATE 'utf8mb4_bin',
+				`file` VARCHAR(64) NOT NULL COLLATE 'utf8mb4_bin',
+				`headers` TEXT NOT NULL COLLATE 'utf8mb4_bin'
+			)
+			COLLATE='utf8mb4_bin'
+			ENGINE=InnoDB
+			;");
 	}
 
 	public function __destruct() {
