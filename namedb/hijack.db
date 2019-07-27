@@ -7,5 +7,7 @@ $TTL 24h;
 		600
 		)
 @	IN	NS	ns
-ns	IN	A	{server-ip}
-@	IN	A	{server-ip}
+ns	IN	A		{IPv4}
+@	IN	A		{IPv4}
+ns	IN	AAAA	{IPv6}
+@	IN	AAAA	{IPv6}

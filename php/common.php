@@ -5,42 +5,20 @@ class Database {
 	public $conn;
 
 	public function __construct() {
-		$this->conn = new mysqli(DB_ADDR, DB_USER, DB_PASS, "reddit");
+		$this->conn = new mysqli(DB_ADDR, DB_USER, DB_PASS, "RedditCache");
 
 		if ($this->conn->connect_error) {
 			die("Connection failed: " . $this->conn->connect_error);
 		}
 
 		$this->conn->query("
-			CREATE TABLE IF NOT EXISTS `reddit`.`redd.it` (
+			CREATE TABLE IF NOT EXISTS `RedditCache`.`redd.it` (
 				`file` VARCHAR(64) NOT NULL COLLATE 'utf8mb4_bin',
-				`views` INT(10) UNSIGNED NOT NULL DEFAULT 1,
+				`views` INTEGER UNSIGNED NOT NULL DEFAULT 1,
 				`last_update` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+				`length` INTEGER UNSIGNED NOT NULL,
 				`contents` MEDIUMBLOB NOT NULL,
 				UNIQUE INDEX `Index 1` (`file`)
-			)
-			COLLATE='utf8mb4_bin'
-			ENGINE=InnoDB
-			;");
-
-		/*
-		$this->conn->query("
-			CREATE TABLE IF NOT EXISTS `reddit`.`metadata` (
-				`timestamp` DATETIME NOT NULL DEFAULT current_timestamp(),
-				`url` VARCHAR(64) NOT NULL COLLATE 'utf8mb4_bin',
-				`file` VARCHAR(64) NOT NULL COLLATE 'utf8mb4_bin',
-				`headers` TEXT NOT NULL COLLATE 'utf8mb4_bin'
-			)
-			COLLATE='utf8mb4_bin'
-			ENGINE=InnoDB
-			;");
-		*/
-
-		# Not sure if this is even 100% necessary.
-		$this->conn->query("
-			CREATE TABLE IF NOT EXISTS `reddit`.`warnings` (
-				`timestamp` DATETIME NOT NULL DEFAULT current_timestamp(),
-				`warning` TEXT NOT NULL COLLATE 'utf8mb4_bin'
 			)
 			COLLATE='utf8mb4_bin'
 			ENGINE=InnoDB
@@ -48,13 +26,6 @@ class Database {
 	}
 
 	public function __destruct() {
-		if (mysqli_warning_count($this->conn) > 0) {
-			$stmt = $this->conn->prepare("INSERT INTO `reddit`.`warnings` (`warning`) VALUES (?)");
-			$warnings = mysqli_get_warnings($this->conn);
-			$stmt->bind_param('s', $warnings);
-			$stmt->execute();
-		}
-
 		$this->conn->close();
 	}
 
@@ -124,4 +95,30 @@ function contains_substring($string, $substring) {
 
 function decode_range($range) {
 	return explode("-", substr($range,6));
+}
+
+function set_content_type($file) {
+	$confident_guess = true;
+
+	if (contains_substring($file, ".jpg")) {
+		header("Content-type: image/jpeg");
+
+	} elseif (contains_substring($file, ".png") || contains_substring($file, ".gif?format=png8")) {
+		header("Content-type: image/png");
+
+	} elseif (contains_substring($file, ".gif")) {
+		header("Content-type: image/gif");
+
+	} elseif (contains_substring($file, ".m3u8")) {
+		header("Content-type: application/x-mpegURL");
+
+	} elseif (contains_substring($file, ".ts")) {
+		header("Content-type: video/MP2T");
+
+	} else {
+		$confident_guess = false;
+		header("Content-type: text/html");
+	}
+
+	return $confident_guess;
 }
