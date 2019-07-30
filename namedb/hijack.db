@@ -9,5 +9,5 @@ $TTL 24h;
 @	IN	NS	ns
 ns	IN	A		{IPv4}
 @	IN	A		{IPv4}
-ns	IN	AAAA	{IPv6}
-@	IN	AAAA	{IPv6}
+#DISABLE_IPv6 ns	IN	AAAA	{IPv6}
+#DISABLE_IPv6 @	IN	AAAA	{IPv6}

@@ -25,19 +25,23 @@ pkg update
 pkg install apg git mariadb104-server mariadb104-client nginx-lite bind914 \
 php73 php73-curl php73-extensions php73-mysqli php73-json php73-xml
 
+git clone https://github.com/Candunc/RedditCache.git /tmp/RedditCache
+cd /tmp/RedditCache
+
 # Credits to Juha Nurmela for the command
 # https://forums.FreeBSD.org/threads/how-to-get-hostname-ip-address.54923/post-310136
 
-IPv4=`ifconfig | awk '$1 == "inet" { print $2 }' | head -n1`
-# If the primary interface is not set up for IPv6, we just hijack ::1
-# This shouldn't be an issue as the IPv6 address should be ignored by the client.
-IPv6=`ifconfig | awk '$1 == "inet6" { print $2 }' | head -n1`
+IPv4=`ifconfig | awk '$1 == "inet" { print $2 }' | head -n 1`
+IPv6=`ifconfig | awk '$1 == "inet6" { print $2 }' | head -n 2 | tail -n 1`
 
-#git clone https://github.com/Candunc/RedditCache.git /tmp/RedditCache
-#cd /tmp/RedditCache
+if [ $IPv6 != "fe80::1%lo" ]
+then
+	sed -i "" "s/#DISABLE_IPv6//g" ./named.hijack.db
+	sed -i "" "s/{IPv6}/$IPv6/g" ./namedb/hijack.db
+fi
 
-sed -i "" "s/{IPv4}/$IPv4/g" ./namedb/hijack.db;
-sed -i "" "s/{IPv6}/$IPv6/g" ./namedb/hijack.db;
+sed -i "" "s/{IPv4}/$IPv4/g" ./namedb/hijack.db
+
 
 # Patch Bind9 conf file
 mv ./namedb/hijack.db /usr/local/etc/namedb/master/
@@ -93,11 +97,11 @@ cd /usr/local/etc/ssl/myCA
 # Generate MITM Certificate
 
 # https://superuser.com/a/226229
-openssl req -new -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -days 3650 \
+openssl req -new -newkey rsa:4096 -days 3650 \
 	-nodes -x509 -subj "/C=CA/ST=BC/L=Kelowna/O=RedditCache/CN=RedditCache" \
 	-keyout myCA.key -out myCA.crt
 
-openssl req -new -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -days 3650 \
+openssl req -new -newkey rsa:4096 -days 3650 \
 	-nodes -subj "/C=CA/ST=BC/L=Kelowna/O=RedditCache/CN=*.redd.it" \
 	-keyout redd.it.key -out redd.it.csr
 
@@ -112,4 +116,4 @@ cp redd.it.crt redd.it.key /usr/local/etc/ssl/
 service php-fpm start
 service named start
 service nginx start
-exit 0;
+exit 0

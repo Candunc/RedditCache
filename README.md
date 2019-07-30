@@ -6,5 +6,8 @@ As a MITM cache, we do need control over both the client's DNS server and instal
 
 ## Installation 
 
-* todo, eventually will be a simple install.sh script
+* curl -O https://raw.githubusercontent.com/Candunc/RedditCache/master/install.sh
+* chmod +x
+* ./install.sh
 
+That will automagically install RedditCache and start up all the services. Set up the clients DNS to point to the server and navigate to http://<SERVER_IP>/myCA.pem and install the root certificate. Then, browse reddit as normal. Videos will take longer to initially load, as it waits for the entire file to cache rather than just requesting the initial range, but subsequent reloads will be instantaneous. 
