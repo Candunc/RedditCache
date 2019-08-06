@@ -87,38 +87,3 @@ function get($url, $headers = NULL) {
 
 	return $content;
 }
-
-# https://stackoverflow.com/a/4366748
-function contains_substring($string, $substring) {
-	return (strpos($string, $substring) !== false);
-}
-
-function decode_range($range) {
-	return explode("-", substr($range,6));
-}
-
-function set_content_type($file) {
-	$confident_guess = true;
-
-	if (contains_substring($file, ".jpg")) {
-		header("Content-type: image/jpeg");
-
-	} elseif (contains_substring($file, ".png") || contains_substring($file, ".gif?format=png8")) {
-		header("Content-type: image/png");
-
-	} elseif (contains_substring($file, ".gif")) {
-		header("Content-type: image/gif");
-
-	} elseif (contains_substring($file, ".m3u8")) {
-		header("Content-type: application/x-mpegURL");
-
-	} elseif (contains_substring($file, ".ts")) {
-		header("Content-type: video/MP2T");
-
-	} else {
-		$confident_guess = false;
-		header("Content-type: text/html");
-	}
-
-	return $confident_guess;
-}
