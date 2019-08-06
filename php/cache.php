@@ -47,10 +47,13 @@ function set_content_type($file) {
 	if (contains_substring($file, '.jpg')) {
 		header('Content-type: image/jpeg');
 
-	} elseif (contains_substring($file, '.png') || contains_substring($file, '.gif?format=png8')) {
+	} elseif (contains_substring($file, '.png') || contains_substring($file, 'format=png8')) {
 		header('Content-type: image/png');
 
-	} elseif (contains_substring($file, '.gif') && !contains_substring($file, '.gif?format=png8')) {
+	} elseif (contains_substring($file, '.mp4') || contains_substring($file, "format=mp4")) {
+		header('Content-type: video/mp4');
+
+	} elseif (contains_substring($file, '.gif')) {
 		header('Content-type: image/gif');
 
 	} elseif (contains_substring($file, '.m3u8')) {

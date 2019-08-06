@@ -12,11 +12,15 @@ $client_headers = getallheaders();
 $url_parts = parse_url($_SERVER['REQUEST_URI']);
 $file = substr($url_parts['path'], 1);
 
+if (isset($_GET["format"])) {
+	$file .= '.' . $_GET["format"];
+}
+
 $url = ('https://' . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);
 
 # Checks the url to see if it meets a common file format, eg .png, .gif
 # and sets the approprate header
-if (!set_content_type($file)) {
+if (!set_content_type($_SERVER['REQUEST_URI'])) {
 	# We aren't serving a specific file, so it's not worth caching.
 	# Usually this means someone used a mobile v.redd.it/somepost URL
 	$cache_enabled = false;
